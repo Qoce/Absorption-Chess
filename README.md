@@ -1,0 +1,2 @@
+# Absorption-Chess
+A digital chess board that follows the rules of Absorption chess.  In Absorption chess, a piece gains all of the powers of a piece it captures.  For example, if a bishop takes a rook, then it becomes functionally the same as a queen.  This is cumulative;  If a pawn takes a bishop that took a knight earlier in the game, it gains the powers of all three pieces. Pawns can promote only if they do not absorb any other piece.
