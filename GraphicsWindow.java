@@ -10,7 +10,6 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
@@ -47,7 +46,8 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener,Window
         frame.addWindowListener(this);
         board = new Board();
         try{
-        	BufferedImage bi = ImageIO.read(new File("src/ChessPieces.png"));
+        	BufferedImage bi = (BufferedImage) ImageIO.read(getClass().getClassLoader().getResource("images/ChessPieces.png"));
+        //	BufferedImage bi = ImageIO.read(new File("src/images/ChessPieces.png"));
         	
         	for(int i = 0; i < 6; i++){
         		for(int j = 0; j < 2; j++){
