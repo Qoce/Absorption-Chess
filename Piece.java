@@ -1,30 +1,43 @@
+package main;
 
 import java.awt.Point;
 import java.util.ArrayList;
 
+/**
+ * Represents a piece on the chessboard, which maybe a normal chess piece, or it may be a piece that has absorbed the powers of another 
+ * piece, such as a rook-knight.
+ * @author Adam Hodapp
+ *
+ */
 public class Piece {
-	public static final int NUM_TYPES = 6;
-	public static final int ROOK = 0;
+	public static final int NUM_TYPES = 6; //Number of possible kinds of pieces, king, queen, rook, bishop, knight, pawn.
+	//Arbitrary constants to represent each piece type
+	public static final int ROOK = 0; 
 	public static final int BISHOP = 1;
-	public static final int QUEEN = 2;
+	public static final int QUEEN = 2; //Technically redundant with rook and bishop
 	public static final int KING = 3;
 	public static final int KNIGHT = 4;
 	public static final int PAWN = 5;
-	public int team; //true = white
+	public int team; //which team a piece is, equal to WHITE or BLACK
 	public static final int WHITE = 0;
 	public static final int BLACK = 1;
+	
 	private int numMoves = 0; //used by pawns for moving twice, and rooks and kings for castling
-	public boolean pawnCanBeEP = false;
-	private boolean[] types;
-	public int imageID[];
-	public int x;
-	public int y;
+	public boolean pawnCanBeEP = false; //If this is a pawn, this flag is true if it just moved, as then it can be captured en passant
+	private boolean[] types; //Which piece powers the piece has. This is a boolean array because a Piece could have several types at once
+	public int imageIDs[];
+	//X and Y coordinates of the pieces on the board
+	public int x; 
+	public int y; 
+	
 	public boolean isAttackingKing = false;
+	
+	
 	public Piece(int type, int team, int x, int y){
 		types = new boolean[NUM_TYPES];
 		types[type] = true;
-		imageID = new int[1];
-		imageID[0] = type;
+		imageIDs = new int[1];
+		imageIDs[0] = type;
 		this.team = team;
 		this.x = x;
 		this.y = y;
@@ -32,15 +45,15 @@ public class Piece {
 	public ArrayList<Point> getAggressiveMoves(Board board){
 		isAttackingKing = false;
 		ArrayList<Point> moves = new ArrayList<Point>();
-		if(types[PAWN] == true) getPawnMoves(moves, board.board);
-		if(types[KNIGHT] == true) getKnightMoves(moves, board.board);
-		if(types[BISHOP] == true) getBishopMoves(moves, board.board, 1000);
-		if(types[ROOK] == true) getRookMoves(moves, board.board, 1000);
-		if(types[QUEEN] == true){
+		if(types[PAWN]) getPawnMoves(moves, board.board);
+		if(types[KNIGHT]) getKnightMoves(moves, board.board);
+		if(types[BISHOP]) getBishopMoves(moves, board.board, 1000);
+		if(types[ROOK]) getRookMoves(moves, board.board, 1000);
+		if(types[QUEEN]){
 			getBishopMoves(moves, board.board, 1000);
 			getRookMoves(moves, board.board, 1000);
 		}
-		if(types[KING] == true){
+		if(types[KING]){
 			getBishopMoves(moves, board.board, 1);
 			getRookMoves(moves, board.board, 1);
 		}
@@ -48,7 +61,7 @@ public class Piece {
 	}
 	public ArrayList<Point> getPassiveMoves(Board board){ //Separating this avoids recursive loop
 		ArrayList<Point> moves = new ArrayList<Point>();
-		if(isOnlyKing() == true){
+		if(isOnlyKing() ){
 			getCastleMoves(moves, board);
 		}
 		return moves;
@@ -61,7 +74,7 @@ public class Piece {
 			System.out.println("RX: " + (this.x + x) / 2);
 			b.movePiece(x < this.x ? 0 : 7, y, (this.x + x) / 2, y, b.board[x < this.x ? 0 : 7][y]);
 		}
-		if(isOnlyPawn() == true) {
+		if(isOnlyPawn() ) {
 			if(Math.abs(y - this.y) == 2) pawnCanBeEP = true;
 			if(x != this.x && !b.justTookPiece()) b.removePiece(x, y + (team == WHITE ? 1 : -1));
 		}
@@ -69,115 +82,118 @@ public class Piece {
 		if(p != null){
 			for(int i = 0; i < p.types.length; i++){
 				if(p.types[i]) {
-					if(types[i] != true) switchedTypes[i] = true;
+					if(!types[i]) switchedTypes[i] = true;
 					types[i] = true;
 				}
 			}
 		}
-		updateImageID();
+		updateimageIDs();
 		numMoves++;
 		this.x = x;
 		this.y = y;
 	}
-	private void updateImageID(){
-		if(types[KING] == true) {
+	private void updateimageIDs(){
+		if(types[KING] ) {
 			int QBR = -1;
-			if(types[QUEEN] == true || (types[ROOK] == true && types[BISHOP] == true)) QBR = QUEEN;
-			else if (types[BISHOP] == true) QBR = BISHOP;
-			else if(types[ROOK] == true) QBR = ROOK;
-			if(types[KNIGHT] == true && QBR != -1){
-				imageID = new int[3];
-				imageID[1] = QBR;
-				imageID[2] = KNIGHT;
+			if(types[QUEEN]  || (types[ROOK]  && types[BISHOP] )) QBR = QUEEN;
+			else if (types[BISHOP] ) QBR = BISHOP;
+			else if(types[ROOK] ) QBR = ROOK;
+			if(types[KNIGHT]  && QBR != -1){
+				imageIDs = new int[3];
+				imageIDs[1] = QBR;
+				imageIDs[2] = KNIGHT;
 			}
-			else if(types[KNIGHT] == true){
-				imageID = new int[2];
-				imageID[1] = KNIGHT;
+			else if(types[KNIGHT] ){
+				imageIDs = new int[2];
+				imageIDs[1] = KNIGHT;
 			}
 			else if(QBR != -1){
-				imageID = new int[2];
-				imageID[1] = QBR;
+				imageIDs = new int[2];
+				imageIDs[1] = QBR;
 			}
 			else{
-				imageID = new int[1];
+				imageIDs = new int[1];
 			}
-			imageID[0] = KING;
+			imageIDs[0] = KING;
 		}
-		else if(types[QUEEN] == true || (types[ROOK] == true && types[BISHOP] == true)) {
+		else if(types[QUEEN]  || (types[ROOK]  && types[BISHOP] )) {
 			if(types[KNIGHT] == false){
-				imageID = new int[1];
+				imageIDs = new int[1];
 			}
 			else{
-				imageID = new int[2];
-				imageID[1] = KNIGHT;
+				imageIDs = new int[2];
+				imageIDs[1] = KNIGHT;
 			}
-			imageID[0] = QUEEN;
+			imageIDs[0] = QUEEN;
 				
 		}
-		else if(types[ROOK] == true) {
-			if(types[KNIGHT] == true && types[PAWN] == true){
-				imageID = new int[3];
-				imageID[1] = KNIGHT;
-				imageID[2] = PAWN;
+		else if(types[ROOK] ) {
+			if(types[KNIGHT]  && types[PAWN] ){
+				imageIDs = new int[3];
+				imageIDs[1] = KNIGHT;
+				imageIDs[2] = PAWN;
 			}
-			else if(types[KNIGHT] == true){
-				imageID = new int[2];
-				imageID[1] = KNIGHT;
+			else if(types[KNIGHT] ){
+				imageIDs = new int[2];
+				imageIDs[1] = KNIGHT;
 			}
-			else if(types[PAWN] == true){
-				imageID = new int[2];
-				imageID[1] = PAWN;
-			}
-			else{
-				imageID = new int[1];
-			}
-			imageID[0] = ROOK;
-		}
-		else if(types[BISHOP] == true) {
-			if(types[KNIGHT] == true && types[PAWN] == true){
-				imageID = new int[3];
-				imageID[1] = KNIGHT;
-				imageID[2] = PAWN;
-			}
-			else if(types[KNIGHT] == true){
-				imageID = new int[2];
-				imageID[1] = KNIGHT;
-			}
-			else if(types[PAWN] == true){
-				imageID = new int[2];
-				imageID[1] = PAWN;
+			else if(types[PAWN] ){
+				imageIDs = new int[2];
+				imageIDs[1] = PAWN;
 			}
 			else{
-				imageID = new int[1];
+				imageIDs = new int[1];
 			}
-			imageID[0] = BISHOP;
+			imageIDs[0] = ROOK;
 		}
-		else if(types[KNIGHT] == true) {
-			if(types[PAWN] == true){
-				imageID = new int[2];
-				imageID[1] = PAWN;
+		else if(types[BISHOP] ) {
+			if(types[KNIGHT]  && types[PAWN] ){
+				imageIDs = new int[3];
+				imageIDs[1] = KNIGHT;
+				imageIDs[2] = PAWN;
+			}
+			else if(types[KNIGHT] ){
+				imageIDs = new int[2];
+				imageIDs[1] = KNIGHT;
+			}
+			else if(types[PAWN] ){
+				imageIDs = new int[2];
+				imageIDs[1] = PAWN;
 			}
 			else{
-				imageID = new int[1];
+				imageIDs = new int[1];
 			}
-			imageID[0] = KNIGHT;
+			imageIDs[0] = BISHOP;
 		}
-		else imageID[0] = PAWN;
+		else if(types[KNIGHT] ) {
+			if(types[PAWN] ){
+				imageIDs = new int[2];
+				imageIDs[1] = PAWN;
+			}
+			else{
+				imageIDs = new int[1];
+			}
+			imageIDs[0] = KNIGHT;
+		}
+		else {
+			imageIDs = new int[1];
+			imageIDs[0] = PAWN;
+		}
 	}
 	public void unMove(int x, int y, Board b, Piece promotion){
 		if(isOnlyKing() && Math.abs(x - this.x) == 2){
 			b.undoMove(x > this.x ? 0 : 7, y, (this.x + x) / 2, y, b.board[(this.x + x) / 2][y], false);
 		}
-		if(types[PAWN] == true) {
+		if(types[PAWN]) {
 			if(Math.abs(y - this.y) == 2) pawnCanBeEP = false;
 			if(x != this.x && b.board[x][y] == null) b.addPiece(this.x, y + (team == WHITE ? 1 : -1), null);
 		}
 		for(int i = 0; i < switchedTypes.length;i++){
-			if(types[i] == true && switchedTypes[i] == true){
+			if(types[i] && switchedTypes[i]){
 				types[i] = false;
 			}
 		}
-		updateImageID();
+		updateimageIDs();
 		numMoves--;
 		this.x = x;
 		this.y = y;
@@ -185,17 +201,20 @@ public class Piece {
 	public boolean isKing(){
 		return types[KING];
 	}
+	/*
+	 * Returns true if and only if the piece is a king that has not inherited the powers of any other piece type
+	 */
 	public boolean isOnlyKing(){
 		for(int i = 0; i < 6; i++){
-			if(types[i] == true && i != KING) return false;
-			if(types[i] == false && i == KING) return false;
+			if(types[i] && i != KING) return false;
+			if(!types[i] && i == KING) return false;
 		}
 		return true;
 	}
 	public boolean isOnlyPawn(){
 		for(int i = 0; i < 6; i++){
-			if(types[i] == true && i != PAWN) return false;
-			if(types[i] == false && i == PAWN) return false;
+			if(types[i] && i != PAWN) return false;
+			if(!types[i]  && i == PAWN) return false;
 		}
 		return true;
 	}
@@ -281,7 +300,7 @@ public class Piece {
 			else if (board[x][y].team != team) {
 				if(canTake) {
 					add(moves, new Point(x, y));
-					if(board[x][y].isKing() == true) {
+					if(board[x][y].isKing()) {
 						isAttackingKing = true;
 					}
 				}

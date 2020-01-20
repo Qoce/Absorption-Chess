@@ -1,3 +1,4 @@
+package main;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -6,6 +7,8 @@ import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
@@ -16,13 +19,13 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 
-public class GraphicsWindow implements MouseListener, MouseMotionListener {
+public class GraphicsWindow implements MouseListener, MouseMotionListener,WindowListener {
 	private JFrame frame;
 	private JLayeredPane panel;
 	private int pixelWidth = 720;
 	private int pixelHeight = 720;
 	public static final int SQUARE_WIDTH = 720/Board.BOARD_WIDTH;
-	public static final int MARGAIN_RADIUS = 2;
+	public static final int MARGIN_RADIUS = 2;
 	private Board board;
 	public Image[] pieceImages = new Image[12];
 	private int turn = Piece.WHITE;
@@ -40,9 +43,12 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
         panel.addMouseListener(this);
         panel.addMouseMotionListener(this);
         frame.setVisible(true);
+        frame.setResizable(false);
+        frame.addWindowListener(this);
         board = new Board();
         try{
-        	BufferedImage bi = ImageIO.read(new File("Chesspeices.png"));
+        	BufferedImage bi = ImageIO.read(new File("src/ChessPieces.png"));
+        	
         	for(int i = 0; i < 6; i++){
         		for(int j = 0; j < 2; j++){
         			pieceImages[i + 6 * j] = bi.getSubimage(300 * i, j * 400, 300, 400);
@@ -51,12 +57,9 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
         }
         catch(Exception e){
         	System.out.println("Image Didn't Load");
+        	System.out.println(e.getMessage());
         }
         drawBoard();
-        long i = System.currentTimeMillis();
-        drawBoard();
-        System.out.println(System.currentTimeMillis() - i);
-    //    createPromotionFrame(5, 2, Piece.WHITE);
 	}
 	public BufferedImage image;
 	public void drawBoard(){
@@ -71,7 +74,7 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
 	        	for (int j = 0; j < pixelHeight; j += SQUARE_WIDTH){
 	        		if ((i + j) % (2 * SQUARE_WIDTH) == 0) g.setColor(new Color(0xDFFF00));
 	        		else g.setColor(new Color(0xABCFED));
-	        		g.fillRect(i + MARGAIN_RADIUS, j + MARGAIN_RADIUS, SQUARE_WIDTH - 2 * MARGAIN_RADIUS, SQUARE_WIDTH - 2 * MARGAIN_RADIUS);
+	        		g.fillRect(i + MARGIN_RADIUS, j + MARGIN_RADIUS, SQUARE_WIDTH - 2 * MARGIN_RADIUS, SQUARE_WIDTH - 2 * MARGIN_RADIUS);
 	        	}
 	        }
 	        boardLabel.setIcon(new ImageIcon(image));
@@ -90,7 +93,7 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
 		Graphics g = image.getGraphics();
 		if ((x + y) % (2 * SQUARE_WIDTH) == 0) g.setColor(new Color(0xDFFF00));
 		else g.setColor(new Color(0xABCFED));
-		g.fillRect(x + MARGAIN_RADIUS, y + MARGAIN_RADIUS, SQUARE_WIDTH - 2 * MARGAIN_RADIUS, SQUARE_WIDTH - 2 * MARGAIN_RADIUS);
+		g.fillRect(x + MARGIN_RADIUS, y + MARGIN_RADIUS, SQUARE_WIDTH - 2 * MARGIN_RADIUS, SQUARE_WIDTH - 2 * MARGIN_RADIUS);
 		JLabel boardLabel = new JLabel();
         boardLabel.setIcon(new ImageIcon(image));
         boardLabel.setBounds(0, 0, 720, 720);
@@ -119,9 +122,9 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
 	public Image[] getImageForPiece(Piece p){
 		int i = 6;
 		if(p.team == Piece.BLACK) i = 0;
-		Image[] images = new Image[p.imageID.length];
+		Image[] images = new Image[p.imageIDs.length];
 		for(int j = 0; j < images.length; j++){
-			images[j] = pieceImages[p.imageID[j] + i];
+			images[j] = pieceImages[p.imageIDs[j] + i];
 		}
 		return images;
 	}
@@ -135,7 +138,7 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
 	    for(int i = 0; i < 4 * SQUARE_WIDTH; i += SQUARE_WIDTH){
 	    	if ((i) % (2 * SQUARE_WIDTH) == 0) g.setColor(new Color(0xDFFF00));
     		else g.setColor(new Color(0xABCFED));
-    		g.fillRect(MARGAIN_RADIUS, i * 2 + MARGAIN_RADIUS,  2 * SQUARE_WIDTH - 2 * MARGAIN_RADIUS, 2 * SQUARE_WIDTH - 2 * MARGAIN_RADIUS);
+    		g.fillRect(MARGIN_RADIUS, i * 2 + MARGIN_RADIUS,  2 * SQUARE_WIDTH - 2 * MARGIN_RADIUS, 2 * SQUARE_WIDTH - 2 * MARGIN_RADIUS);
 	    }
 	    Piece[] options = {new Piece(Piece.BISHOP, team, x , y), new Piece(Piece.KNIGHT, team, x , y), new Piece(Piece.QUEEN, team, x , y), new Piece(Piece.ROOK, team, x , y)};
 	    for(int i = 0; i < options.length; i++){
@@ -143,7 +146,7 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
 	    }
 	    JLabel promotion = new JLabel();
 	    promotion.setIcon(new ImageIcon(image));
-	    promotion.setBounds(0, 0, SQUARE_WIDTH * 2, SQUARE_WIDTH * 4 * 2);
+	    promotion.setBounds(0, 0, SQUARE_WIDTH * 2 + 20, SQUARE_WIDTH * 4 * 2 + 20);
 	    promotionFrame.addMouseListener(this);
 	    promotionFrame.setVisible(true);
 	    promotionFrame.add(promotion);
@@ -165,7 +168,7 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
 					for(Point p : moves){
 						if(isMoveValid(board.board[x / SQUARE_WIDTH][y / SQUARE_WIDTH],p)){
 							g.setColor(new Color(0, 0, 0, 128));
-							g.fillRect(p.x * SQUARE_WIDTH + MARGAIN_RADIUS, p.y * SQUARE_WIDTH + MARGAIN_RADIUS, SQUARE_WIDTH - 2 * MARGAIN_RADIUS, SQUARE_WIDTH - 2 * MARGAIN_RADIUS);
+							g.fillRect(p.x * SQUARE_WIDTH + MARGIN_RADIUS, p.y * SQUARE_WIDTH + MARGIN_RADIUS, SQUARE_WIDTH - 2 * MARGIN_RADIUS, SQUARE_WIDTH - 2 * MARGIN_RADIUS);
 						}
 					}
 				}
@@ -258,14 +261,29 @@ public class GraphicsWindow implements MouseListener, MouseMotionListener {
 		panel.repaint();
 	}
 	@Override
-	public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseMoved(MouseEvent e) {}
 	public void drawPiece(Image[] peices, Graphics g, int x, int y, int width){
 		g.drawImage(peices[0], x, y, width, width, null);
 		if(peices.length > 1) g.drawImage(peices[1], x + 2 * width / 3, y, width / 3, width / 3, null);
 		if(peices.length > 2) g.drawImage(peices[2], x, y, width / 3, width / 3, null);
 		if(peices.length > 3) g.drawImage(peices[2], x, y + 2 * width / 3, width / 3, width / 3, null);
 	}
+	@Override
+	public void windowActivated(WindowEvent e) {}
+	@Override
+	public void windowClosed(WindowEvent e) {
+		System.exit(0);
+	}
+	@Override
+	public void windowClosing(WindowEvent e) {
+		System.exit(0);
+	}
+	@Override
+	public void windowDeactivated(WindowEvent e) {}
+	@Override
+	public void windowDeiconified(WindowEvent e) {}
+	@Override
+	public void windowIconified(WindowEvent e) {}
+	@Override
+	public void windowOpened(WindowEvent e) {}
 }
